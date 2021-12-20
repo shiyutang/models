@@ -41,7 +41,10 @@ def train_one_epoch(
         train_reader_cost += time.time() - reader_start
         train_start = time.time()
         output = model(image)
+        # checkpoint 1 logit
         loss = criterion(output, target)
+        # checkpoint 2 loss
+        # checkpoint 4 grad|lr|optimizer
         loss.backward()
         optimizer.step()
         optimizer.clear_grad()
@@ -84,6 +87,7 @@ def evaluate(model, criterion, data_loader, device, print_freq=100):
             loss = criterion(output, target)
 
             acc1, acc5 = utils.accuracy(output, target, topk=(1, 5))
+            # checkpoint 3 metric 
             # FIXME need to take into account that the datasets
             # could have been padded in distributed setup
             batch_size = image.shape[0]
@@ -130,7 +134,6 @@ def load_data(traindir, valdir, args):
         batch_size=args.batch_size,
         shuffle=True,
         drop_last=False)
-    # train_sampler = paddle.io.RandomSampler(dataset)
 
     test_sampler = paddle.io.SequenceSampler(dataset_test)
 
@@ -154,8 +157,6 @@ def main(args):
     dataset, dataset_test, train_sampler, test_sampler = load_data(
         train_dir, val_dir, args)
     train_batch_sampler = train_sampler
-    # train_batch_sampler = paddle.io.BatchSampler(
-    #     sampler=train_sampler, batch_size=args.batch_size)
     data_loader = paddle.io.DataLoader(
         dataset=dataset,
         num_workers=args.workers,
