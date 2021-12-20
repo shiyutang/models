@@ -25,26 +25,28 @@ def test_forward():
     torch_model.eval()
     torch_state_dict = torch.load("./data/mobilenet_v3_small-047dcff4.pth")
     torch_model.load_state_dict(torch_state_dict)
-    
+
     # prepare logger & load data
     reprod_logger = ReprodLogger()
     inputs = np.load("./data/fake_data.npy")
     labels = np.load("./data/fake_label.npy")
     print(inputs.shape, labels.shape)
-    
+
     # save the paddle output
-    paddle_out = paddle_model(paddle.to_tensor(
-        inputs, dtype="float32"))
-    loss_paddle = criterion_paddle(paddle_out, paddle.to_tensor(labels, dtype="int64"))
+    paddle_out = paddle_model(paddle.to_tensor(inputs, dtype="float32"))
+    loss_paddle = criterion_paddle(
+        paddle_out, paddle.to_tensor(
+            labels, dtype="int64"))
     reprod_logger.add("loss", loss_paddle.cpu().detach().numpy())
     reprod_logger.save("./result/loss_paddle.npy")
-    
+
     # save the torch output
-    torch_out = torch_model(torch.tensor(
-        inputs, dtype=torch.float32))
-    loss_torch = criterion_torch(torch_out, torch.tensor(labels, dtype="int64"))
+    torch_out = torch_model(torch.tensor(inputs, dtype=torch.float32))
+    loss_torch = criterion_torch(
+        torch_out, torch.tensor(
+            labels, dtype="int64"))
     reprod_logger.add("loss", loss_torch.cpu().detach().numpy())
-    reprod_logger.save("./result/loss_torch.npy")  
+    reprod_logger.save("./result/loss_torch.npy")
 
 
 if __name__ == "__main__":
@@ -58,6 +60,3 @@ if __name__ == "__main__":
     # compare result and produce log
     diff_helper.compare_info(torch_info, paddle_info)
     diff_helper.report(path="./result/log/loss_diff.log")
-
-
-

@@ -10,7 +10,8 @@ from models.mobilenet_v3_paddle import mobilenet_v3_small as mv3_small_paddle
 from models.mobilenet_v3_torch import mobilenet_v3_small as mv3_small_torch
 
 
-def train_one_epoch_paddle(inputs, labels, model, criterion, optimizer, lr_sche, max_iter)
+def train_one_epoch_paddle(inputs, labels, model, criterion, optimizer,
+                           lr_sche, max_iter):
     # train some iters 
     for idx in range(max_iter):
         image = paddle.to_tensor(inputs, dtype="float32")
@@ -22,13 +23,15 @@ def train_one_epoch_paddle(inputs, labels, model, criterion, optimizer, lr_sche,
         loss.backward()
         optimizer.step()
         optimizer.clear_grad()
-        
+
         reprod_logger.add("loss_{}".format(idx), loss.cpu().detach().numpy())
         reprod_logger.add("lr_{}".format(idx), np.array(lr_sche.get_lr()))
-    
+
     reprod_logger.save("./result/losses_paddle.npy")
 
-def train_one_epoch_torch(inputs, labels, model, criterion, optimizer, lr_sche, max_iter)
+
+def train_one_epoch_torch(inputs, labels, model, criterion, optimizer, lr_sche,
+                          max_iter):
     # train some iters 
     for idx in range(max_iter):
         image = torch.tensor(inputs, dtype="float32")
@@ -44,8 +47,9 @@ def train_one_epoch_torch(inputs, labels, model, criterion, optimizer, lr_sche, 
 
         reprod_logger.add("loss_{}".format(idx), loss.cpu().detach().numpy())
         reprod_logger.add("lr_{}".format(idx), np.array(lr_sche.get_last_lr()))
-    
+
     reprod_logger.save("./result/losses_torch.npy")
+
 
 def test_forward():
     max_iter = 10
@@ -71,24 +75,26 @@ def test_forward():
 
     # init optimizer
     lr_scheduler_paddle = paddle.optimizer.lr.StepDecay(
-        lr, step_size=max_iter//3, gamma=lr_gamma)
+        lr, step_size=max_iter // 3, gamma=lr_gamma)
     opt_paddle = paddle.optimizer.Momentum(
-            learning_rate=lr_scheduler_paddle,
-            momentum=momentum,
-            parameters=model.parameters())
-    lr_scheduler_torch = StepLR(opt_torch, step_size=max_iter//3, gamma=lr_gamma)
-    opt_torch = torch.optim.SGD(model.parameters(), 
-                                lr=lr, momentum=momentum)
+        learning_rate=lr_scheduler_paddle,
+        momentum=momentum,
+        parameters=model.parameters())
+    lr_scheduler_torch = StepLR(
+        opt_torch, step_size=max_iter // 3, gamma=lr_gamma)
+    opt_torch = torch.optim.SGD(model.parameters(), lr=lr, momentum=momentum)
 
     # prepare logger & load data
     reprod_logger = ReprodLogger()
     inputs = np.load("./data/fake_data.npy")
     labels = np.load("./data/fake_label.npy")
     print(inputs.shape, labels.shape)
-    
-    train_one_epoch_paddle(inputs, labels, paddle_model, criterion_torch, opt_paddle, lr_scheduler_paddle, max_iter)
-    
-    train_one_epoch_torch(inputs, labels, torch_model, criterion_paddle, opt_paddle, lr_scheduler_torch, max_iter)
+
+    train_one_epoch_paddle(inputs, labels, paddle_model, criterion_torch,
+                           opt_paddle, lr_scheduler_paddle, max_iter)
+
+    train_one_epoch_torch(inputs, labels, torch_model, criterion_paddle,
+                          opt_paddle, lr_scheduler_torch, max_iter)
 
 
 if __name__ == "__main__":
@@ -102,6 +108,3 @@ if __name__ == "__main__":
     # compare result and produce log
     diff_helper.compare_info(torch_info, paddle_info)
     diff_helper.report(path="./result/log/backward_diff.log")
-
-
-

@@ -19,21 +19,19 @@ def test_forward():
     torch_model.eval()
     torch_state_dict = torch.load("./data/mobilenet_v3_small-047dcff4.pth")
     torch_model.load_state_dict(torch_state_dict)
-    
+
     reprod_logger = ReprodLogger()
     inputs = np.load("./data/fake_data.npy")
-    
+
     # save the paddle output
-    paddle_out = paddle_model(paddle.to_tensor(
-        inputs, dtype="float32"))
+    paddle_out = paddle_model(paddle.to_tensor(inputs, dtype="float32"))
     reprod_logger.add("logits", paddle_out.cpu().detach().numpy())
     reprod_logger.save("./result/forward_paddle.npy")
-    
+
     # save the torch output
-    torch_out = torch_model(torch.tensor(
-        inputs, dtype=torch.float32))
+    torch_out = torch_model(torch.tensor(inputs, dtype=torch.float32))
     reprod_logger.add("logits", torch_out.cpu().detach().numpy())
-    reprod_logger.save("./result/forward_torch.npy")  
+    reprod_logger.save("./result/forward_torch.npy")
 
 
 if __name__ == "__main__":

@@ -10,7 +10,7 @@ from models.mobilenet_v3_torch import mobilenet_v3_small as mv3_small_torch
 from utils import accuracy_paddle, accuracy_torch
 
 
-def evaluate(inputs, labels, model, acc, tag)
+def evaluate(inputs, labels, model, acc, tag):
     model.eval()
     output = model(image)
 
@@ -18,8 +18,9 @@ def evaluate(inputs, labels, model, acc, tag)
 
     reprod_logger.add("acc_top1", np.array(accracy[0]))
     reprod_logger.add("acc_top5", np.array(accracy[1]))
-    
+
     reprod_logger.save("./result/acc_{}.npy".format(tag))
+
 
 def test_forward():
     # load paddle model
@@ -40,9 +41,23 @@ def test_forward():
     labels = np.load("./data/fake_label.npy")
     image = paddle.to_tensor(inputs, dtype="float32")
     target = paddle.to_tensor(labels, dtype="int64")
-    
-    train_one_epoch_paddle(paddle.to_tensor(inputs, dtype="float32"), paddle.to_tensor(labels, dtype="int64"), paddle_model, accuracy_paddle, 'paddle')
-    train_one_epoch_torch(torch.tensor(inputs, dtype="float32"), torch.tensor(labels, dtype="int64"), torch_model, accuracy_torch, 'torch')
+
+    train_one_epoch_paddle(
+        paddle.to_tensor(
+            inputs, dtype="float32"),
+        paddle.to_tensor(
+            labels, dtype="int64"),
+        paddle_model,
+        accuracy_paddle,
+        'paddle')
+    train_one_epoch_torch(
+        torch.tensor(
+            inputs, dtype="float32"),
+        torch.tensor(
+            labels, dtype="int64"),
+        torch_model,
+        accuracy_torch,
+        'torch')
 
 
 if __name__ == "__main__":
@@ -56,6 +71,3 @@ if __name__ == "__main__":
     # compare result and produce log
     diff_helper.compare_info(torch_info, paddle_info)
     diff_helper.report(path="./result/log/acc_diff.log")
-
-
-
