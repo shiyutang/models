@@ -3,14 +3,15 @@
 import torch
 import paddle
 import numpy as np
+from reprod_log import ReprodLogger
 from reprod_log import ReprodDiffHelper
 
-from models.mobilenet_v3_paddle import mobilenet_v3_small as mv3_small_paddle
-from models.mobilenet_v3_torch import mobilenet_v3_small as mv3_small_torch
+from mobilenetv3_paddle.mobilenet_v3_paddle import mobilenet_v3_small as mv3_small_paddle
+from mobilenetv3_ref.mobilenet_v3_torch import mobilenet_v3_small as mv3_small_torch
 from utils import accuracy_paddle, accuracy_torch
 
 
-def evaluate(inputs, labels, model, acc, tag):
+def evaluate(image, labels, model, acc, tag, reprod_logger):
     model.eval()
     output = model(image)
 
@@ -42,22 +43,22 @@ def test_forward():
     image = paddle.to_tensor(inputs, dtype="float32")
     target = paddle.to_tensor(labels, dtype="int64")
 
-    train_one_epoch_paddle(
+    evaluate(
         paddle.to_tensor(
             inputs, dtype="float32"),
         paddle.to_tensor(
             labels, dtype="int64"),
         paddle_model,
         accuracy_paddle,
-        'paddle')
-    train_one_epoch_torch(
+        'paddle', reprod_logger)
+    evaluate(
         torch.tensor(
-            inputs, dtype="float32"),
+            inputs, dtype=torch.float32),
         torch.tensor(
-            labels, dtype="int64"),
+            labels, dtype=torch.int64),
         torch_model,
         accuracy_torch,
-        'torch')
+        'torch', reprod_logger)
 
 
 if __name__ == "__main__":

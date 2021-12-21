@@ -3,9 +3,9 @@ from functools import partial
 from typing import Any, Callable, List, Optional, Sequence
 
 import paddle
-from paddle import nn
+import paddle.nn as nn
 
-from .misc import ConvNormActivation, SqueezeExcitation as SElayer
+from .misc_paddle import ConvNormActivation, SqueezeExcitation as SElayer
 
 __all__ = ["MobileNetV3", "mobilenet_v3_large", "mobilenet_v3_small"]
 

@@ -3,10 +3,11 @@
 import torch
 import paddle
 import numpy as np
+from reprod_log import ReprodLogger
 from reprod_log import ReprodDiffHelper
 
-from models.mobilenet_v3_paddle import mobilenet_v3_small as mv3_small_paddle
-from models.mobilenet_v3_torch import mobilenet_v3_small as mv3_small_torch
+from mobilenetv3_paddle.mobilenet_v3_paddle import mobilenet_v3_small as mv3_small_paddle
+from mobilenetv3_ref.mobilenet_v3_torch import mobilenet_v3_small as mv3_small_torch
 
 
 def test_forward():
@@ -30,7 +31,7 @@ def test_forward():
     reprod_logger = ReprodLogger()
     inputs = np.load("./data/fake_data.npy")
     labels = np.load("./data/fake_label.npy")
-    print(inputs.shape, labels.shape)
+    # print(inputs.shape, labels.shape)  # (1, 3, 224, 224) (1,)
 
     # save the paddle output
     paddle_out = paddle_model(paddle.to_tensor(inputs, dtype="float32"))
@@ -44,7 +45,7 @@ def test_forward():
     torch_out = torch_model(torch.tensor(inputs, dtype=torch.float32))
     loss_torch = criterion_torch(
         torch_out, torch.tensor(
-            labels, dtype="int64"))
+            labels, dtype=torch.int64))
     reprod_logger.add("loss", loss_torch.cpu().detach().numpy())
     reprod_logger.save("./result/loss_torch.npy")
 

@@ -1,13 +1,10 @@
-from collections import defaultdict, deque, OrderedDict
-import copy
-import datetime
-import hashlib
 import time
+import torch
+import datetime
 import paddle
 import paddle.distributed as dist
+from collections import defaultdict, deque
 
-import errno
-import os
 
 
 class SmoothedValue(object):

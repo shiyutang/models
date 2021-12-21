@@ -2,9 +2,10 @@ import torch
 import paddle
 import numpy as np
 from reprod_log import ReprodDiffHelper
+from reprod_log import ReprodLogger
 
-from models.mobilenet_v3_paddle import mobilenet_v3_small as mv3_small_paddle
-from models.mobilenet_v3_torch import mobilenet_v3_small as mv3_small_torch
+from mobilenetv3_paddle.mobilenet_v3_paddle import mobilenet_v3_small as mv3_small_paddle
+from mobilenetv3_ref.mobilenet_v3_torch import mobilenet_v3_small as mv3_small_torch
 
 
 def test_forward():
