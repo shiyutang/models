@@ -47,7 +47,7 @@ def test_forward():
         torch_out, torch.tensor(
             labels, dtype=torch.int64))
     reprod_logger.add("loss", loss_torch.cpu().detach().numpy())
-    reprod_logger.save("./result/loss_torch.npy")
+    reprod_logger.save("./result/loss_ref.npy")
 
 
 if __name__ == "__main__":
@@ -55,7 +55,7 @@ if __name__ == "__main__":
 
     # load data
     diff_helper = ReprodDiffHelper()
-    torch_info = diff_helper.load_info("./result/loss_torch.npy")
+    torch_info = diff_helper.load_info("./result/loss_ref.npy")
     paddle_info = diff_helper.load_info("./result/loss_paddle.npy")
 
     # compare result and produce log

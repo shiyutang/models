@@ -8,7 +8,8 @@ from reprod_log import ReprodDiffHelper
 
 from mobilenetv3_paddle.mobilenet_v3_paddle import mobilenet_v3_small as mv3_small_paddle
 from mobilenetv3_ref.mobilenet_v3_torch import mobilenet_v3_small as mv3_small_torch
-from utils import accuracy_paddle, accuracy_torch
+from mobilenetv3_ref import accuracy_torch
+from mobilenetv3_paddle import accuracy_paddle
 
 
 def evaluate(image, labels, model, acc, tag, reprod_logger):
@@ -20,7 +21,7 @@ def evaluate(image, labels, model, acc, tag, reprod_logger):
     reprod_logger.add("acc_top1", np.array(accracy[0]))
     reprod_logger.add("acc_top5", np.array(accracy[1]))
 
-    reprod_logger.save("./result/acc_{}.npy".format(tag))
+    reprod_logger.save("./result/metric_{}.npy".format(tag))
 
 
 def test_forward():
@@ -58,7 +59,7 @@ def test_forward():
             labels, dtype=torch.int64),
         torch_model,
         accuracy_torch,
-        'torch', reprod_logger)
+        'ref', reprod_logger)
 
 
 if __name__ == "__main__":
@@ -66,9 +67,9 @@ if __name__ == "__main__":
 
     # load data
     diff_helper = ReprodDiffHelper()
-    torch_info = diff_helper.load_info("./result/acc_torch.npy")
-    paddle_info = diff_helper.load_info("./result/acc_paddle.npy")
+    torch_info = diff_helper.load_info("./result/metric_ref.npy")
+    paddle_info = diff_helper.load_info("./result/metric_paddle.npy")
 
     # compare result and produce log
     diff_helper.compare_info(torch_info, paddle_info)
-    diff_helper.report(path="./result/log/acc_diff.log")
+    diff_helper.report(path="./result/log/metric_diff.log")

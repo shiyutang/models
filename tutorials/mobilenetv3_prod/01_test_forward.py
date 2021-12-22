@@ -21,10 +21,11 @@ def test_forward():
     torch_state_dict = torch.load("./data/mobilenet_v3_small-047dcff4.pth")
     torch_model.load_state_dict(torch_state_dict)
 
-    reprod_logger = ReprodLogger()
+    # load data
     inputs = np.load("./data/fake_data.npy")
 
     # save the paddle output
+    reprod_logger = ReprodLogger()
     paddle_out = paddle_model(paddle.to_tensor(inputs, dtype="float32"))
     reprod_logger.add("logits", paddle_out.cpu().detach().numpy())
     reprod_logger.save("./result/forward_paddle.npy")
@@ -32,7 +33,7 @@ def test_forward():
     # save the torch output
     torch_out = torch_model(torch.tensor(inputs, dtype=torch.float32))
     reprod_logger.add("logits", torch_out.cpu().detach().numpy())
-    reprod_logger.save("./result/forward_torch.npy")
+    reprod_logger.save("./result/forward_ref.npy")
 
 
 if __name__ == "__main__":
@@ -40,7 +41,7 @@ if __name__ == "__main__":
 
     # load data
     diff_helper = ReprodDiffHelper()
-    torch_info = diff_helper.load_info("./result/forward_torch.npy")
+    torch_info = diff_helper.load_info("./result/forward_ref.npy")
     paddle_info = diff_helper.load_info("./result/forward_paddle.npy")
 
     # compare result and produce log
