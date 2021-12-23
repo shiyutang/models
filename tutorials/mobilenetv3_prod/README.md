@@ -11,8 +11,8 @@
     - [3.2 生成伪数据]()
     - [3.3 准备模型]()
 - [4. 开始使用]()
-    - [4.1 数据加载对齐]()
-    - [4.2 模型前向对齐]()
+    - [4.1 模型前向对齐]()
+    - [4.2 数据加载对齐]()
     - [4.3 评估指标对齐]()
     - [4.4 损失对齐]()
     - [4.5 反向梯度初次对齐]()
@@ -82,31 +82,9 @@ def gen_fake_data():
 ## 4. 开始使用
 准备好数据之后，我们通过下面对应训练流程的拆解步骤进行复现对齐。
 
-### 4.1 数据加载对齐
-第一步就是数据读取部分，这一部分，我们比较从数据读取到模型传入之间我们进行的操作是否和参考操作一致。
-主要代码如下所示，我们读取相同的输入，比较输出之间的差异，即可知道我们的数据增强是否和参考实现保持一致：
-##todo： 增加数据增强相关代码。
 
-【**运行文件**】
-通过运行以下指令，我们进行测试，测试数据可以解压我们准备的 lite_data.tar 获得，对于自身的数据，也可以抽取几张 validationset 的图片用作验证。
-
-```python
-cd models/tutorials/mobilenetv3_prod/
-tar -xvf lite_data.rar
-python test_data.py
-```
-
-【**获得结果**】
-运行文件之后，我们获得以下命令行输出，可以发现我们的验证结果满足预期，数据加载部分验证通过：
-
-```bash
-[2021/10/14 18:09:15] root INFO: logits:
-[2021/10/14 18:09:15] root INFO:    mean diff: check passed: True, value: 5.600350050372072e-07
-[2021/10/14 18:09:15] root INFO: diff check passed
-```
-
-### 4.2 模型前向对齐
-数据对齐之后，第二部分就来到前向对齐的验证，验证流程如下图所示:
+### 4.1 模型前向对齐
+论文复现中，最重要的来到前向对齐的验证，验证流程如下图所示:
 
 <div align="center">
     <img src="./images/forward.png" width=500">
@@ -174,6 +152,78 @@ python 01_test_forward.py
 ```
 这里我们发现在`reprod logger`默认的平均差异小于1e-6的标准下，当前前向对齐是不符合条件的，但是这是由于前向 op 计算导致的微小的差异。一般说来前向误差在 1e-5 左右都是可以接受的，到这里我们就验证了网络的前向是对齐的，完成了第一个打卡点。
 
+### 4.2 数据加载对齐
+验证了模型的前向对齐，接下来，我们验证数据读取部分，这一部分，我们比较从数据读取到模型传入之间我们进行的操作是否和参考操作一致。
+主要代码如下所示，我们读取相同的输入，比较数据增强后输出之间的差异，即可知道我们的数据增强是否和参考实现保持一致：
+
+```python
+def build_torch_data_pipeline():
+    dataset_test = torchvision.datasets.ImageFolder(
+        "./lite_data/val/",
+        presets_torch.ClassificationPresetEval(
+            crop_size=224, resize_size=256), is_valid_file=None)
+    
+    test_sampler = torch.utils.data.SequentialSampler(dataset_test)
+    
+    data_loader_test = torch.utils.data.DataLoader(
+        dataset_test,
+        batch_size=4,
+        sampler=test_sampler,
+        num_workers=0,
+        pin_memory=True)
+    return dataset_test, data_loader_test
+
+
+def test_data_pipeline():
+    paddle_dataset, paddle_dataloader = build_paddle_data_pipeline()
+    torch_dataset, torch_dataloader = build_torch_data_pipeline()
+
+    logger_paddle_data = ReprodLogger()
+    logger_torch_data = ReprodLogger()
+
+    logger_paddle_data.add("length", np.array(len(paddle_dataset)))
+    logger_torch_data.add("length", np.array(len(torch_dataset)))
+
+
+    for idx, (paddle_batch, torch_batch
+              ) in enumerate(zip(paddle_dataloader, torch_dataloader)):
+        if idx >= 5:
+            break
+        logger_paddle_data.add(f"dataloader_{idx}", paddle_batch[0].numpy())
+        logger_torch_data.add(f"dataloader_{idx}",
+                              torch_batch[0].detach().cpu().numpy())
+    logger_paddle_data.save("./result/data_paddle.npy")
+    logger_torch_data.save("./result/data_ref.npy")
+    
+```
+
+【**运行文件**】
+通过运行以下指令，我们进行测试，测试数据可以解压我们准备的 lite_data.tar 获得，对于自身的数据，也可以抽取几张 validationset 的图片用作验证。
+
+```python
+cd models/tutorials/mobilenetv3_prod/
+tar -xvf lite_data.rar
+python 02_test_data.py
+```
+
+【**获得结果**】
+运行文件之后，我们获得以下命令行输出，可以发现我们的验证结果满足预期，数据加载部分验证通过：
+
+```bash
+[2021/12/23 17:21:22] root INFO: length: 
+[2021/12/23 17:21:22] root INFO:        mean diff: check passed: True, value: 0.0
+[2021/12/23 17:21:22] root INFO: dataloader_0: 
+[2021/12/23 17:21:22] root INFO:        mean diff: check passed: True, value: 0.0
+[2021/12/23 17:21:22] root INFO: dataloader_1: 
+[2021/12/23 17:21:22] root INFO:        mean diff: check passed: True, value: 0.0
+[2021/12/23 17:21:22] root INFO: dataloader_2: 
+[2021/12/23 17:21:22] root INFO:        mean diff: check passed: True, value: 0.0
+[2021/12/23 17:21:22] root INFO: dataloader_3: 
+[2021/12/23 17:21:22] root INFO:        mean diff: check passed: True, value: 0.0
+[2021/12/23 17:21:22] root INFO: diff check passed
+```
+
+
 ### 4.3 评估指标对齐
 随后我们来到评估指标对齐，对齐流程如图所示：
 
@@ -223,7 +273,7 @@ def test_forward():
 通过运行以下代码，我们验证评估指标对齐效果。
 ```bash
 cd models/tutorials/mobilenetv3_prod/
-python 02_test_metric.py
+python 03_test_metric.py
 ```
 
 【**获得结果**】
@@ -274,7 +324,7 @@ def test_forward():
 通过运行以下代码，我们验证评估指标对齐效果。
 ```bash
 cd models/tutorials/mobilenetv3_prod/
-python 03_test_loss.py 
+python 04_test_loss.py 
 ```
 
 【**获得结果**】
@@ -341,23 +391,30 @@ def test_backward():
 通过运行以下代码，我们验证反向传播对齐效果。
 ```bash
 cd models/tutorials/mobilenetv3_prod/
-python 04_test_backward.py
+python 05_test_backward.py
 ```
 
 【**获得结果**】
 进入`result/log/loss_diff.log`中，就会有下列结果，结果表示三轮损失的差异在 1e-6 附近，说明我们反向传播的实现对齐， 完成第四个打卡点：
 ```bash
-[2021/12/22 20:21:39] root INFO: loss_0: 
-[2021/12/22 20:21:39] root INFO: 	mean diff: check passed: False, value: 1.9073486328125e-06
-[2021/12/22 20:21:39] root INFO: loss_1: 
-[2021/12/22 20:21:39] root INFO: 	mean diff: check passed: True, value: 9.5367431640625e-07
-[2021/12/22 20:21:39] root INFO: loss_2: 
-[2021/12/22 20:21:39] root INFO: 	mean diff: check passed: False, value: 9.5367431640625e-06
-[2021/12/22 20:21:39] root INFO: diff check failed
+[2021/12/23 15:51:16] root INFO: loss_0: 
+[2021/12/23 15:51:16] root INFO: 	mean diff: check passed: False, value: 1.9073486328125e-06
+[2021/12/23 15:51:16] root INFO: lr_0: 
+[2021/12/23 15:51:16] root INFO: 	mean diff: check passed: True, value: 0.0
+[2021/12/23 15:51:16] root INFO: loss_1: 
+[2021/12/23 15:51:16] root INFO: 	mean diff: check passed: False, value: 2.384185791015625e-06
+[2021/12/23 15:51:16] root INFO: lr_1: 
+[2021/12/23 15:51:16] root INFO: 	mean diff: check passed: True, value: 0.0
+[2021/12/23 15:51:16] root INFO: loss_2: 
+[2021/12/23 15:51:16] root INFO: 	mean diff: check passed: False, value: 1.1920928955078125e-05
+[2021/12/23 15:51:16] root INFO: lr_2: 
+[2021/12/23 15:51:16] root INFO: 	mean diff: check passed: True, value: 0.0
+[2021/12/23 15:51:16] root INFO: diff check failed
+
 
 ```
 
-### 4.5 训练对齐
+### 4.6 训练对齐
 通过以上步骤，我们验证了模型、数据、评估指标、损失、反向传播的正确性，也就为我们的训练对齐打下了良好的基础。接下来，我们按照以下流程验证训练对齐结果，即对网络进行训练，并在训练后验证精度是否达到指标：
 <div align="center">
     <img src="./images/train.png" width=500">
