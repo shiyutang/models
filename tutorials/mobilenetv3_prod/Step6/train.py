@@ -41,10 +41,7 @@ def train_one_epoch(
         train_reader_cost += time.time() - reader_start
         train_start = time.time()
         output = model(image)
-        # checkpoint 1 logit
         loss = criterion(output, target)
-        # checkpoint 2 loss
-        # checkpoint 4 grad|lr|optimizer
         loss.backward()
         optimizer.step()
         optimizer.clear_grad()
@@ -87,7 +84,6 @@ def evaluate(model, criterion, data_loader, device, print_freq=100):
             loss = criterion(output, target)
 
             acc1, acc5 = utils.accuracy(output, target, topk=(1, 5))
-            # checkpoint 3 metric 
             # FIXME need to take into account that the datasets
             # could have been padded in distributed setup
             batch_size = image.shape[0]
@@ -134,6 +130,7 @@ def load_data(traindir, valdir, args):
         batch_size=args.batch_size,
         shuffle=True,
         drop_last=False)
+    # train_sampler = paddle.io.RandomSampler(dataset)
 
     test_sampler = paddle.io.SequenceSampler(dataset_test)
 
@@ -157,6 +154,8 @@ def main(args):
     dataset, dataset_test, train_sampler, test_sampler = load_data(
         train_dir, val_dir, args)
     train_batch_sampler = train_sampler
+    # train_batch_sampler = paddle.io.BatchSampler(
+    #     sampler=train_sampler, batch_size=args.batch_size)
     data_loader = paddle.io.DataLoader(
         dataset=dataset,
         num_workers=args.workers,
@@ -222,7 +221,6 @@ def main(args):
         lr_scheduler.step()
         if paddle.distributed.get_rank() == 0:
             top1 = evaluate(model, criterion, data_loader_test, device=device)
-            best_top1 = max(best_top1, top1)
             if args.output_dir:
                 paddle.save(model.state_dict(),
                             os.path.join(args.output_dir,
@@ -234,6 +232,12 @@ def main(args):
                             os.path.join(args.output_dir, 'latest.pdparams'))
                 paddle.save(optimizer.state_dict(),
                             os.path.join(args.output_dir, 'latest.pdopt'))
+                if top1 > best_top1:
+                    best_top1 = top1
+                    paddle.save(model.state_dict(),
+                                os.path.join(args.output_dir, 'best.pdparams'))
+                    paddle.save(optimizer.state_dict(),
+                                os.path.join(args.output_dir, 'best.pdopt'))
 
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
@@ -249,7 +253,7 @@ def get_args_parser(add_help=True):
     parser.add_argument('--data-path', default='./data', help='dataset')
     parser.add_argument('--model', default='mobilenet_v3_small', help='model')
     parser.add_argument('--device', default='gpu', help='device')
-    parser.add_argument('-b', '--batch-size', default=32, type=int)
+    parser.add_argument('-b', '--batch-size', default=256, type=int)
     parser.add_argument(
         '--epochs',
         default=90,
@@ -265,7 +269,7 @@ def get_args_parser(add_help=True):
         help='number of data loading workers (default: 16)')
     parser.add_argument('--opt', default='sgd', type=str, help='optimizer')
     parser.add_argument(
-        '--lr', default=0.00125, type=float, help='initial learning rate')
+        '--lr', default=0.1, type=float, help='initial learning rate')
     parser.add_argument(
         '--momentum', default=0.9, type=float, metavar='M', help='momentum')
     parser.add_argument(
@@ -287,7 +291,7 @@ def get_args_parser(add_help=True):
         type=float,
         help='decrease lr by a factor of lr-gamma')
     parser.add_argument(
-        '--print-freq', default=1, type=int, help='print frequency')
+        '--print-freq', default=10, type=int, help='print frequency')
     parser.add_argument('--output-dir', default='.', help='path where to save')
     parser.add_argument('--resume', default='', help='resume from checkpoint')
     parser.add_argument(

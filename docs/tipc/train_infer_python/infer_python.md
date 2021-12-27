@@ -33,13 +33,7 @@ Paddle Inference 是飞桨的原生推理库， 作用于服务器端和云端�
 更多关于Paddle Inference推理引擎的介绍，可以参考[Paddle Inference官网教程](https://www.paddlepaddle.org.cn/documentation/docs/zh/guides/05_inference_deployment/inference/inference_cn.html)。
 
 
-本文档主要介绍飞桨模型在 Linux GPU/CPU 下基于预测引擎的推理过程开发。主要包含三个步骤：
-
-（1）参考 [《模型复现指南》](../../lwfx/ArticleReproduction_CV.md)，完成模型的训练与基于训练引擎的预测。
-
-（2）在基于训练引擎预测的基础上，完成基于预测引擎的推理过程开发。
-
-（3）完成Linux GPU/CPU 训练、推理测试开发（[《Linux GPU/CPU 基础训练推理测试开发规范》](./test_train_infer_python.md)）。
+本文档主要介绍飞桨模型在 Linux GPU/CPU 下基于预测引擎的推理过程开发。
 
 
 <a name="2"></a>
@@ -183,7 +177,7 @@ class InferenceEngine(object):
 
 **【实战】**
 
-该模板类对应AlexNet的实现位于：[infer.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/deploy/inference/python/infer.py)。
+该模板类对应AlexNet的实现位于：[infer.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/deploy/inference_python/infer.py)。
 
 其中每个子模块的操作在下面详细介绍。
 
@@ -200,7 +194,7 @@ class InferenceEngine(object):
 针对AlexNet模型，推理引擎初始化函数实现如下，其中模型结构和参数文件路径、是否使用GPU、是否开启MKLDNN等内容都是可以配置的。
 
 ```py
-    # https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/deploy/inference/python/infer.py#L38
+    # https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/deploy/inference_python/infer.py#L38
     def load_predictor(self, model_file_path, params_file_path):
         args = self.args
         config = inference.Config(model_file_path, params_file_path)
@@ -249,7 +243,7 @@ class InferenceEngine(object):
 图像分类AlexNet为例，预处理包含`Resize`, `CenterCrop`, `Normalize`, `ToCHW` 4个步骤，预处理实现如下所示。
 
 ```py
-    # https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/deploy/inference/python/infer.py#L68
+    # https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/deploy/inference_python/infer.py#L68
     def preprocess(self, img_path):
         with open(img_path, "rb") as f:
             img = Image.open(f)
@@ -350,16 +344,24 @@ if __name__ == "__main__":
 推理过程一般包含预处理、预测引擎运行、后处理三个步骤，对这三个步骤的预测耗时进行记录，可以帮助我们更好地分析模型推理的耗时瓶颈，有助于后续的模型性能优化。
 
 AutoLog是一个自动日志记录工具，包含自动计时，统计CPU内存、GPU显存等信息，自动生成日志等功能。本文档中主要基于AutoLog完成推理日志的规范化，更多关于使用方法可以参考[AutoLog](https://github.com/LDOUBLEV/AutoLog)。
+<<<<<<< HEAD
 
 **【基本流程】**
 
 在训练代码中添加日志统计信息，对推理中的信息进行统计。
 
+=======
+
+**【基本流程】**
+
+在训练代码中添加日志统计信息，对推理中的信息进行统计。
+
+>>>>>>> 7a886b6157db1e16913589c79c852548d6c6545b
 基于`AutoLog`工具规范化推理日志的过程包括：初始化、在每个节点的记录、输出日志。
 
 **【实战】**
 
-AlexNet推理脚本中，打开`benchmark`选项，即可输出规范化的推理日志，可以参考：[infer.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/deploy/pdinference/infer.py)。
+AlexNet推理脚本中，打开`benchmark`选项，即可输出规范化的推理日志，可以参考：[infer.py](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/deploy/inference_python/infer.py)。
 
 ```py
     # init benchmark

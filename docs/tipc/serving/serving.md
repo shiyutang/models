@@ -18,13 +18,7 @@
 
 Paddle Serving依托深度学习框架PaddlePaddle旨在帮助深度学习开发者和企业提供高性能、灵活易用的工业级在线推理服务。Paddle Serving支持RESTful、gRPC、bRPC等多种协议，提供多种异构硬件和多种操作系统环境下推理解决方案，和多种经典预训练模型示例。
 
-本文档主要介绍飞桨模型在 Linux GPU/CPU 下服务化部署能力的开发。主要包含三个步骤：
-
-（1）参考 [《Linux GPU/CPU 基础训练推理开发文档》](../train_infer_python/README.md) 完成模型的训练和基于Paddle Inference的模型推理开发。
-
-（2）在Paddle Inference的模型推理基础上，完成服务化部署能力的开发（**本文档**）。
-
-（3）参考[《Linux GPU/CPU 基础训练推理测试开发文档》](./test_serving.md)，完成TIPC 服务化部署测试开发。
+本文档主要介绍飞桨模型在 Linux GPU/CPU 下服务化部署能力的开发。
 
 <a name="2---"></a>
 
@@ -41,11 +35,13 @@ Paddle Serving依托深度学习框架PaddlePaddle旨在帮助深度学习开发
 <a name="21---"></a>
 ### 2.1 准备测试数据和部署环境
 
-【基本流程】
+**【基本流程】**
 
 **（1）准备测试数据：** 从验证集或者测试集中抽出至少一张图像，用于后续推理过程验证。
 
 **（2）准备部署环境**
+
+docker是一个开源的应用容器引擎，可以让应用程序更加方便地被打包和移植。建议在docker中进行Serving服务化部署。
 
 首先准备docker环境，AIStudio环境已经安装了合适的docker。如果是非AIStudio环境，请[参考文档](https://github.com/PaddlePaddle/PaddleOCR/blob/release/2.3/doc/doc_ch/environment.md#2)中的 "1.3.2 Docker环境配置" 安装docker环境。
 
@@ -74,7 +70,7 @@ Paddle Serving Server更多不同运行环境的whl包下载地址，请参考�
 ```
 python3 -m paddle_serving_client.convert --dirname {静态图模型路径} --model_filename {模型结构文件} --params_filename {模型参数文件} --serving_server {转换后的服务器端模型和配置文件存储路径} --serving_client {转换后的客户端模型和配置文件存储路径}
 ```
-上面命令中 "转换后的服务器端模型和配置文件" 将用于后续服务化部署。
+上面命令中 "转换后的服务器端模型和配置文件" 将用于后续服务化部署。其中`paddle_serving_client.convert`命令是`paddle_serving_client` whl包内置的转换函数，无需修改。
 
 【实战】
 
@@ -312,9 +308,9 @@ unset https_proxy
 
 **【实战】**
 
-AlexNet中，模型推理的命令可以参考：[AlexNet 模型推理](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/README.md#512-%E6%A8%A1%E5%9E%8B%E6%8E%A8%E7%90%86)
+AlexNet中，模型推理的命令可以参考：[AlexNet 模型推理](https://github.com/littletomatodonkey/AlexNet-Prod/tree/tipc/pipeline/Step5/AlexNet_paddle/deploy/inference_python#23-%E6%A8%A1%E5%9E%8B%E6%8E%A8%E7%90%86)
 
-模型部署的命令说明可以参考：[AlexNet模型部署](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/deploy/serving/README.md#24-%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%AE%BF%E9%97%AE%E6%9C%8D%E5%8A%A1)
+模型部署的命令说明可以参考：[AlexNet模型部署](https://github.com/littletomatodonkey/AlexNet-Prod/blob/tipc/pipeline/Step5/AlexNet_paddle/deploy/serving_python/README.md#24-%E5%AE%A2%E6%88%B7%E7%AB%AF%E8%AE%BF%E9%97%AE%E6%9C%8D%E5%8A%A1)
 
 **【核验】**
 
